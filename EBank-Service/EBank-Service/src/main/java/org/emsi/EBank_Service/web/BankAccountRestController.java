@@ -38,6 +38,12 @@ public class BankAccountRestController {
         return bankAccountService.findById(id);
     }
 
+    // Tous les comptes d'un client, ex : GET /api/bankAccounts/customer/1
+    @GetMapping("/customer/{customerId}")
+    public List<BankAccountResponseDTO> findByCustomer(@PathVariable Long customerId) {
+        return bankAccountService.findByCustomerId(customerId);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public BankAccountResponseDTO create(@Valid @RequestBody BankAccountRequestDTO request) {

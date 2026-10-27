@@ -3,6 +3,7 @@ package org.emsi.EBank_Service.dto;
 import java.time.LocalDate;
 
 import org.emsi.EBank_Service.enums.AccountType;
+import org.emsi.EBank_Service.model.Customer;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,4 +21,6 @@ public class BankAccountResponseDTO {
     private String currency;
     private AccountType type;
     private Long customerId;
+    // Rempli grâce à l'appel OpenFeign vers Customer-Service
+    private Customer customer;
 }

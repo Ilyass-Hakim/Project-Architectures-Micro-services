@@ -3,12 +3,17 @@ package org.emsi.EBank_Service.mappers;
 import org.emsi.EBank_Service.dto.BankAccountRequestDTO;
 import org.emsi.EBank_Service.dto.BankAccountResponseDTO;
 import org.emsi.EBank_Service.entities.BankAccount;
+import org.emsi.EBank_Service.model.Customer;
 import org.springframework.stereotype.Component;
 
 @Component
 public class BankAccountMapper {
 
     public BankAccountResponseDTO toResponse(BankAccount account) {
+        return toResponse(account, null);
+    }
+
+    public BankAccountResponseDTO toResponse(BankAccount account, Customer customer) {
         return BankAccountResponseDTO.builder()
                 .id(account.getId())
                 .createdAt(account.getCreatedAt())
@@ -16,6 +21,7 @@ public class BankAccountMapper {
                 .currency(account.getCurrency())
                 .type(account.getType())
                 .customerId(account.getCustomerId())
+                .customer(customer)
                 .build();
     }
 
