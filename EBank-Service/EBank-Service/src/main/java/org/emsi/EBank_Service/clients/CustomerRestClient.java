@@ -11,10 +11,12 @@ import org.springframework.web.bind.annotation.PathVariable;
  * Client déclaratif OpenFeign : on décrit l'API distante avec les annotations
  * Spring MVC, et Spring génère l'implémentation qui fait les appels HTTP.
  *
- * - name : nom du service (servira à le retrouver dans Eureka plus tard)
- * - url  : adresse en dur tant qu'Eureka n'existe pas (vide => recherche par nom)
+ * - name            : nom du service (servira à le retrouver dans Eureka plus tard)
+ * - url             : adresse en dur tant qu'Eureka n'existe pas (vide => recherche par nom)
+ * - fallbackFactory : réponse de secours quand l'appel échoue (Circuit Breaker)
  */
-@FeignClient(name = "customer-service", url = "${customer-service.url:}")
+@FeignClient(name = "customer-service", url = "${customer-service.url:}",
+        fallbackFactory = CustomerRestClientFallbackFactory.class)
 public interface CustomerRestClient {
 
     @GetMapping("/api/customers/{id}")
