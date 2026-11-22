@@ -1,0 +1,1001 @@
+{
+  "info": {
+    "name": "EBank Micro-services",
+    "description": "Tests des micro-services via la Gateway (port 8888).\n\nOrdre de démarrage : Discovery (8761) → Customer (8081) → EBank (8082) → Gateway (8888).\nSwagger-UI : http://localhost:8081/swagger-ui.html et http://localhost:8082/swagger-ui.html",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "gateway",
+      "value": "http://localhost:8888"
+    },
+    {
+      "key": "eureka",
+      "value": "http://localhost:8761"
+    },
+    {
+      "key": "customerId",
+      "value": ""
+    },
+    {
+      "key": "accountId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Customers (/api/customers)",
+      "item": [
+        {
+          "name": "Lister les clients",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/customers",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "api",
+                "customers"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Au moins 3 clients\", () => pm.expect(pm.response.json().length).to.be.at.least(3));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Client par id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/customers/1",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "1"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Client 1\", () => pm.expect(pm.response.json().id).to.eql(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechercher par nom",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/customers/search?keyword=ima",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "keyword",
+                  "value": "ima"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Trouve Imane\", () => pm.expect(pm.response.json()[0].name).to.eql(\"Imane\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Créer un client",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway}}/api/customers",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "api",
+                "customers"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sara\",\n  \"email\": \"sara.{{$timestamp}}@gmail.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"customerId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modifier le client créé",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway}}/api/customers/{{customerId}}",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "{{customerId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sara Bennani\",\n  \"email\": \"sara.bennani.{{$timestamp}}@gmail.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Nom modifié\", () => pm.expect(pm.response.json().name).to.eql(\"Sara Bennani\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Email déjà utilisé (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway}}/api/customers",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "api",
+                "customers"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Doublon\",\n  \"email\": \"mohamed@gmail.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Client invalide (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway}}/api/customers",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "api",
+                "customers"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\",\n  \"email\": \"pas-un-email\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Client inconnu (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/customers/9999",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "9999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Supprimer le client créé",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/customers/{{customerId}}",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "{{customerId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Bank Accounts (/api/bankAccounts)",
+      "item": [
+        {
+          "name": "Lister les comptes (avec clients via OpenFeign)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/bankAccounts",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "api",
+                "bankAccounts"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Chaque compte contient son client\", () => pm.expect(pm.response.json()[0].customer.name).to.be.a(\"string\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Comptes d'un client",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/bankAccounts/customer/1",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "api",
+                "bankAccounts",
+                "customer",
+                "1"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"2 comptes\", () => pm.expect(pm.response.json().length).to.be.at.least(2));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Créer un compte",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway}}/api/bankAccounts",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "api",
+                "bankAccounts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"balance\": 1500,\n  \"currency\": \"MAD\",\n  \"type\": \"CURRENT_ACCOUNT\",\n  \"customerId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"accountId\", pm.response.json().id);",
+                  "pm.test(\"Client rempli par Feign\", () => pm.expect(pm.response.json().customer.id).to.eql(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Compte par id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/bankAccounts/{{accountId}}",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "api",
+                "bankAccounts",
+                "{{accountId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Modifier le compte",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway}}/api/bankAccounts/{{accountId}}",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "api",
+                "bankAccounts",
+                "{{accountId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"balance\": 2000,\n  \"currency\": \"MAD\",\n  \"type\": \"SAVING_ACCOUNT\",\n  \"customerId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Solde 2000\", () => pm.expect(pm.response.json().balance).to.eql(2000));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Compte pour un client inconnu (404)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway}}/api/bankAccounts",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "api",
+                "bankAccounts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"balance\": 100,\n  \"currency\": \"MAD\",\n  \"type\": \"CURRENT_ACCOUNT\",\n  \"customerId\": 9999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Compte invalide (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway}}/api/bankAccounts",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "api",
+                "bankAccounts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"balance\": -1,\n  \"currency\": \"MADX\",\n  \"type\": \"CURRENT_ACCOUNT\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Supprimer le compte",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/bankAccounts/{{accountId}}",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "api",
+                "bankAccounts",
+                "{{accountId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Spring Data REST",
+      "item": [
+        {
+          "name": "Clients (projection fullCustomer)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/customers?projection=fullCustomer",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "customers"
+              ],
+              "query": [
+                {
+                  "key": "projection",
+                  "value": "fullCustomer"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Clients par nom",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/customers/search/byName?kw=ima",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "customers",
+                "search",
+                "byName"
+              ],
+              "query": [
+                {
+                  "key": "kw",
+                  "value": "ima"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Comptes par type",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/bankAccounts/search/byType?type=SAVING_ACCOUNT",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "bankAccounts",
+                "search",
+                "byType"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "SAVING_ACCOUNT"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Comptes par client",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/bankAccounts/search/byCustomer?customerId=2",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "bankAccounts",
+                "search",
+                "byCustomer"
+              ],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "2"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Gateway & Discovery",
+      "item": [
+        {
+          "name": "Routes chargées par la Gateway",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/actuator/gateway/routes",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "actuator",
+                "gateway",
+                "routes"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Route dynamique : customer-service",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/customer-service/api/customers",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "customer-service",
+                "api",
+                "customers"
+              ]
+            },
+            "description": "Route créée automatiquement à partir d'Eureka (discovery locator)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Route dynamique : ebank-service",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/ebank-service/api/bankAccounts",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "ebank-service",
+                "api",
+                "bankAccounts"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Services enregistrés dans Eureka",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{eureka}}/eureka/apps",
+              "host": [
+                "{{eureka}}"
+              ],
+              "path": [
+                "eureka",
+                "apps"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"customer-service et ebank-service présents\", () => {",
+                  "  const names = pm.response.json().applications.application.map(a => a.name);",
+                  "  pm.expect(names).to.include.members([\"CUSTOMER-SERVICE\", \"EBANK-SERVICE\"]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Circuit Breaker (arrêter Customer-Service avant)",
+      "item": [
+        {
+          "name": "Comptes avec Customer-Service arrêté",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/bankAccounts",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "api",
+                "bankAccounts"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Fallback : client Not available\", () => pm.expect(pm.response.json()[0].customer.name).to.eql(\"Not available\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Création refusée avec Customer-Service arrêté (503)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway}}/api/bankAccounts",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "api",
+                "bankAccounts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"balance\": 500,\n  \"currency\": \"MAD\",\n  \"type\": \"CURRENT_ACCOUNT\",\n  \"customerId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 503\", () => pm.response.to.have.status(503));"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "À lancer à part : arrêter Customer-Service, puis envoyer ces requêtes. EBank répond avec un client \"Not available\" (fallback) et refuse les créations (503)."
+    }
+  ]
+}

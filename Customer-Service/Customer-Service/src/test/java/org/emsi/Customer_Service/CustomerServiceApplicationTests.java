@@ -22,6 +22,14 @@ class CustomerServiceApplicationTests {
 	private MockMvc mockMvc;
 
 	@Test
+	void exposesOpenApiDocumentation() throws Exception {
+		mockMvc.perform(get("/v3/api-docs"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.info.title").value("Customer-Service API"))
+				.andExpect(jsonPath("$.paths['/api/customers']").exists());
+	}
+
+	@Test
 	void listsSeededCustomersWithIds() throws Exception {
 		mockMvc.perform(get("/customers"))
 				.andExpect(status().isOk())

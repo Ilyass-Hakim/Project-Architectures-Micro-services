@@ -10,7 +10,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.info.Info;
+
 @SpringBootApplication
+@OpenAPIDefinition(info = @Info(title = "Customer-Service API", version = "1.0",
+		description = "Gestion des clients de la banque"))
 public class CustomerServiceApplication {
 
 	public static void main(String[] args) {

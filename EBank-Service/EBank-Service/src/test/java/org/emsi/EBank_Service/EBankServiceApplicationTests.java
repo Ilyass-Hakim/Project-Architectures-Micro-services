@@ -49,6 +49,14 @@ class EBankServiceApplicationTests {
 	}
 
 	@Test
+	void exposesOpenApiDocumentation() throws Exception {
+		mockMvc.perform(get("/v3/api-docs"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.info.title").value("EBank-Service API"))
+				.andExpect(jsonPath("$.paths['/api/bankAccounts']").exists());
+	}
+
+	@Test
 	void listsSeededAccountsThroughDataRestWithIds() throws Exception {
 		mockMvc.perform(get("/bankAccounts"))
 				.andExpect(status().isOk())

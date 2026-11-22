@@ -12,7 +12,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.info.Info;
+
 @SpringBootApplication
+@OpenAPIDefinition(info = @Info(title = "EBank-Service API", version = "1.0",
+		description = "Gestion des comptes bancaires (clients récupérés via OpenFeign)"))
 @EnableFeignClients // active la détection des interfaces @FeignClient
 public class EBankServiceApplication {
 
