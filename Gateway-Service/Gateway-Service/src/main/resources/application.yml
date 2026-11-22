@@ -23,6 +23,10 @@ spring:
               uri: ${EBANK_SERVICE_URI:lb://ebank-service}
               predicates:
                 - Path=/api/bankAccounts/**, /bankAccounts/**
+            - id: ai-agent-service
+              uri: ${AI_AGENT_SERVICE_URI:lb://ai-agent-service}
+              predicates:
+                - Path=/chat/**
           # 2) Routes dynamiques : une route est créée automatiquement pour chaque service d'Eureka
           #    ex : http://localhost:8888/customer-service/api/customers
           discovery:

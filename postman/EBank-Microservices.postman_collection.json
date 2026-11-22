@@ -996,6 +996,202 @@
         }
       ],
       "description": "À lancer à part : arrêter Customer-Service, puis envoyer ces requêtes. EBank répond avec un client \"Not available\" (fallback) et refuse les créations (503)."
+    },
+    {
+      "name": "6. AI Agent (chatbot via MCP)",
+      "description": "Nécessite OPENAI_API_KEY et l'agent démarré (port 8090) après Customer et EBank. Les réponses varient d'un appel à l'autre.",
+      "item": [
+        {
+          "name": "Lister les clients",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Réponse non vide\", () => pm.expect(pm.response.text().length).to.be.above(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/chat?query=Quels sont les clients de la banque ?&conversationId=postman",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "chat"
+              ],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "Quels sont les clients de la banque ?"
+                },
+                {
+                  "key": "conversationId",
+                  "value": "postman"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Comptes d'un client",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Réponse non vide\", () => pm.expect(pm.response.text().length).to.be.above(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/chat?query=Quels sont les comptes de Imane et leur solde total ?&conversationId=postman",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "chat"
+              ],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "Quels sont les comptes de Imane et leur solde total ?"
+                },
+                {
+                  "key": "conversationId",
+                  "value": "postman"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mémoire : question de suivi",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Réponse non vide\", () => pm.expect(pm.response.text().length).to.be.above(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/chat?query=Et lequel a le plus gros solde ?&conversationId=postman",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "chat"
+              ],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "Et lequel a le plus gros solde ?"
+                },
+                {
+                  "key": "conversationId",
+                  "value": "postman"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Créer un compte",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Réponse non vide\", () => pm.expect(pm.response.text().length).to.be.above(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/chat?query=Ouvre un compte courant de 1000 MAD pour Yassine&conversationId=postman",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "chat"
+              ],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "Ouvre un compte courant de 1000 MAD pour Yassine"
+                },
+                {
+                  "key": "conversationId",
+                  "value": "postman"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Autre conversation (mémoire séparée)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Réponse non vide\", () => pm.expect(pm.response.text().length).to.be.above(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/chat?query=De quel client parlions-nous ?&conversationId=autre",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "chat"
+              ],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "De quel client parlions-nous ?"
+                },
+                {
+                  "key": "conversationId",
+                  "value": "autre"
+                }
+              ]
+            }
+          }
+        }
+      ]
     }
   ]
 }
