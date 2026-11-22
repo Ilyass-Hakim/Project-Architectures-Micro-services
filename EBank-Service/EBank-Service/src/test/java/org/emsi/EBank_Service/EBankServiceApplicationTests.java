@@ -4,6 +4,8 @@ import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -11,17 +13,23 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.emsi.EBank_Service.clients.CustomerRestClient;
 import org.emsi.EBank_Service.entities.BankAccount;
 import org.emsi.EBank_Service.enums.AccountType;
+import org.emsi.EBank_Service.model.Customer;
 import org.emsi.EBank_Service.repository.BankAccountRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-@SpringBootTest
+// Les tests tournent sans Eureka et sans Customer-Service :
+// le client Feign est remplacé par un mock (sinon POST /api/bankAccounts renverrait 503).
+@SpringBootTest(properties = "DISCOVERY_ENABLED=false")
 @AutoConfigureMockMvc
 class EBankServiceApplicationTests {
 
@@ -30,6 +38,15 @@ class EBankServiceApplicationTests {
 
 	@Autowired
 	private BankAccountRepository bankAccountRepository;
+
+	@MockitoBean
+	private CustomerRestClient customerRestClient;
+
+	@BeforeEach
+	void mockCustomerService() {
+		when(customerRestClient.findCustomerById(anyLong()))
+				.thenAnswer(call -> new Customer(call.getArgument(0), "Mohamed", "mohamed@gmail.com"));
+	}
 
 	@Test
 	void listsSeededAccountsThroughDataRestWithIds() throws Exception {
@@ -66,7 +83,8 @@ class EBankServiceApplicationTests {
 				.andExpect(status().isCreated())
 				.andExpect(jsonPath("$.id").exists())
 				.andExpect(jsonPath("$.createdAt").exists())
-				.andExpect(jsonPath("$.currency").value("EUR"));
+				.andExpect(jsonPath("$.currency").value("EUR"))
+				.andExpect(jsonPath("$.customer.name").value("Mohamed"));
 
 		String id = bankAccountRepository.findByCustomerId(1L).stream()
 				.filter(account -> "EUR".equals(account.getCurrency()))

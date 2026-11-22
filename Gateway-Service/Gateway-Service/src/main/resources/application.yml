@@ -5,27 +5,34 @@ spring:
   application:
     name: gateway-service
   cloud:
-    # Eureka désactivé tant que le Discovery Service n'existe pas
+    # Eureka (Discovery-Service, port 8761). Sans Eureka : DISCOVERY_ENABLED=false
     discovery:
-      enabled: ${DISCOVERY_ENABLED:false}
+      enabled: ${DISCOVERY_ENABLED:true}
     gateway:
       server:
         webflux:
-          # Routes STATIQUES : on indique nous-mêmes l'adresse de chaque service.
-          # Une fois Eureka en place, on remplacera http://localhost:808x par lb://nom-du-service
+          # 1) Routes déclarées : lb://nom-du-service => l'adresse réelle est demandée à Eureka
+          #    ex : http://localhost:8888/api/customers
+          #    Sans Eureka : CUSTOMER_SERVICE_URI=http://localhost:8081, EBANK_SERVICE_URI=http://localhost:8082
           routes:
             - id: customer-service
-              uri: ${CUSTOMER_SERVICE_URI:http://localhost:8081}
+              uri: ${CUSTOMER_SERVICE_URI:lb://customer-service}
               predicates:
                 - Path=/api/customers/**, /customers/**
             - id: ebank-service
-              uri: ${EBANK_SERVICE_URI:http://localhost:8082}
+              uri: ${EBANK_SERVICE_URI:lb://ebank-service}
               predicates:
                 - Path=/api/bankAccounts/**, /bankAccounts/**
+          # 2) Routes dynamiques : une route est créée automatiquement pour chaque service d'Eureka
+          #    ex : http://localhost:8888/customer-service/api/customers
+          discovery:
+            locator:
+              enabled: ${DISCOVERY_ENABLED:true}
+              lower-case-service-id: true
 
 eureka:
   client:
-    enabled: ${DISCOVERY_ENABLED:false}
+    enabled: ${DISCOVERY_ENABLED:true}
     service-url:
       defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
   instance:
