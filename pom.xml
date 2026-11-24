@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<!--
+		POM racine (agrégateur) : il regroupe les micro-services pour que l'IDE
+		les charge tous d'un coup. Chaque service garde son propre pom.xml
+		(parent spring-boot-starter-parent) et se lance séparément.
+	-->
+	<groupId>org.emsi</groupId>
+	<artifactId>project-architectures-micro-services</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<name>Project Architectures Micro-services</name>
+
+	<modules>
+		<module>Discovery-Service/Discovery-Service</module>
+		<module>Customer-Service/Customer-Service</module>
+		<module>EBank-Service/EBank-Service</module>
+		<module>Gateway-Service/Gateway-Service</module>
+		<module>AI-Agent-Service/AI-Agent-Service</module>
+		<module>Discord-Bot-Service/Discord-Bot-Service</module>
+	</modules>
+</project>
