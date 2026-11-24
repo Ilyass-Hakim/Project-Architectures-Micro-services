@@ -48,10 +48,19 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer, Dispo
 
     private static final Logger log = LoggerFactory.getLogger(TelegramBot.class);
 
+    /**
+     * Essais de connexion à Telegram au démarrage : délai de 10 s, 20 s, 30 s... plafonné à 60 s,
+     * soit environ 25 minutes au total (Telegram peut bloquer un bot plusieurs minutes : 429).
+     */
+    static final int MAX_START_ATTEMPTS = 30;
+    static final long RETRY_DELAY_SECONDS = 10;
+    static final long MAX_RETRY_DELAY_SECONDS = 60;
+
     private final EbankAiAgent agent;
     private final String token;
     private final TelegramClient telegramClient;
-    private TelegramBotsLongPollingApplication botsApplication;
+    private volatile TelegramBotsLongPollingApplication botsApplication;
+    private volatile boolean stopped;
 
     @Autowired
     public TelegramBot(EbankAiAgent agent, @Value("${telegram.bot.token}") String token) {
@@ -65,17 +74,55 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer, Dispo
         this.telegramClient = telegramClient;
     }
 
-    /** Démarre le long polling une fois l'application prête. */
+    /**
+     * Démarre le long polling une fois l'application prête, en arrière-plan :
+     * l'agent (REST /chat) n'attend pas Telegram pour être disponible.
+     */
     @EventListener(ApplicationReadyEvent.class)
     public void start() {
-        try {
-            botsApplication = new TelegramBotsLongPollingApplication();
-            botsApplication.registerBot(token, this);
-            log.info("Telegram bot started (long polling)");
+        Thread.ofVirtual().name("telegram-bot-start").start(this::connectWithRetry);
+    }
+
+    /**
+     * Telegram peut refuser une connexion (429 Too Many Requests), par exemple après
+     * plusieurs redémarrages rapprochés de l'agent : on réessaie avec un délai croissant.
+     */
+    private void connectWithRetry() {
+        for (int attempt = 1; attempt <= MAX_START_ATTEMPTS && !stopped; attempt++) {
+            TelegramBotsLongPollingApplication application = new TelegramBotsLongPollingApplication();
+            try {
+                application.registerBot(token, this);
+                botsApplication = application;
+                log.info("Telegram bot started (long polling)");
+                return;
+            }
+            catch (TelegramApiException e) {
+                closeQuietly(application);
+                if (attempt == MAX_START_ATTEMPTS) {
+                    // un token invalide ne doit pas empêcher le reste de l'agent (REST /chat) de fonctionner
+                    log.error("Telegram bot could not start, check TELEGRAM_BOT_TOKEN", e);
+                    return;
+                }
+                long delaySeconds = Math.min(RETRY_DELAY_SECONDS * attempt, MAX_RETRY_DELAY_SECONDS);
+                log.warn("Telegram bot start failed ({}), new attempt {}/{} in {} s",
+                        e, attempt + 1, MAX_START_ATTEMPTS, delaySeconds);
+                try {
+                    Thread.sleep(delaySeconds * 1000);
+                }
+                catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
         }
-        catch (TelegramApiException e) {
-            // un token invalide ne doit pas empêcher le reste de l'agent (REST /chat) de fonctionner
-            log.error("Telegram bot could not start, check TELEGRAM_BOT_TOKEN", e);
+    }
+
+    private static void closeQuietly(TelegramBotsLongPollingApplication application) {
+        try {
+            application.close();
+        }
+        catch (Exception e) {
+            log.debug("Could not close Telegram application", e);
         }
     }
 
@@ -140,6 +187,7 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer, Dispo
 
     @Override
     public void destroy() throws Exception {
+        stopped = true;
         if (botsApplication != null) {
             botsApplication.close();
         }
